@@ -1,0 +1,142 @@
+[
+    {
+      "id": 1,
+      "question": "Show all products",
+      "expected_tables": ["products"],
+      "difficulty": "easy",
+      "category": "basic_select"
+    },
+    {
+      "id": 2,
+      "question": "List customers from USA",
+      "expected_tables": ["customers"],
+      "difficulty": "easy",
+      "category": "filtering"
+    },
+    {
+      "id": 3,
+      "question": "What are the top 10 most expensive products?",
+      "expected_tables": ["products"],
+      "difficulty": "easy",
+      "category": "sorting"
+    },
+    {
+      "id": 4,
+      "question": "Show total sales by category",
+      "expected_tables": ["categories", "products", "order_items"],
+      "difficulty": "medium",
+      "category": "aggregation_joins"
+    },
+    {
+      "id": 5,
+      "question": "Find customers who have placed more than 5 orders",
+      "expected_tables": ["customers", "orders"],
+      "difficulty": "medium",
+      "category": "aggregation_having"
+    },
+    {
+      "id": 6,
+      "question": "What is the average order value per customer segment?",
+      "expected_tables": ["customers", "orders"],
+      "difficulty": "medium",
+      "category": "groupby_aggregate"
+    },
+    {
+      "id": 7,
+      "question": "List products that have never been ordered",
+      "expected_tables": ["products", "order_items"],
+      "difficulty": "medium",
+      "category": "left_join"
+    },
+    {
+      "id": 8,
+      "question": "Show monthly revenue for the year 2024",
+      "expected_tables": ["orders"],
+      "difficulty": "medium",
+      "category": "date_aggregation"
+    },
+    {
+      "id": 9,
+      "question": "Find the top 5 customers by total spending",
+      "expected_tables": ["customers", "orders"],
+      "difficulty": "medium",
+      "category": "ranking"
+    },
+    {
+      "id": 10,
+      "question": "Which products have rating above 4.5 and are currently out of stock?",
+      "expected_tables": ["products"],
+      "difficulty": "easy",
+      "category": "multiple_conditions"
+    },
+    {
+      "id": 11,
+      "question": "Calculate profit margin by brand",
+      "expected_tables": ["products", "order_items"],
+      "difficulty": "difficult",
+      "category": "complex_calculation"
+    },
+    {
+      "id": 12,
+      "question": "Show products with their average review rating and total review count",
+      "expected_tables": ["products", "reviews"],
+      "difficulty": "medium",
+      "category": "aggregation_joins"
+    },
+    {
+      "id": 13,
+      "question": "Find customers who ordered in January 2024 but not in February 2024",
+      "expected_tables": ["customers", "orders"],
+      "difficulty": "difficult",
+      "category": "subquery_negation"
+    },
+    {
+      "id": 14,
+      "question": "What is the average shipping cost by shipping method?",
+      "expected_tables": ["shipping"],
+      "difficulty": "easy",
+      "category": "simple_aggregation"
+    },
+    {
+      "id": 15,
+      "question": "List all orders with their customer names and total items",
+      "expected_tables": ["orders", "customers", "order_items"],
+      "difficulty": "medium",
+      "category": "multi_table_join"
+    },
+    {
+      "id": 16,
+      "question": "Show categories with more than 10 products",
+      "expected_tables": ["categories", "products"],
+      "difficulty": "medium",
+      "category": "having_clause"
+    },
+    {
+      "id": 17,
+      "question": "Find products that have discounts applied",
+      "expected_tables": ["order_items"],
+      "difficulty": "easy",
+      "category": "filtering"
+    },
+    {
+      "id": 18,
+      "question": "What percentage of orders were delivered on time?",
+      "expected_tables": ["shipping"],
+      "difficulty": "difficult",
+      "category": "percentage_calculation"
+    },
+    {
+      "id": 19,
+      "question": "Show customer retention rate by comparing repeat vs new customers",
+      "expected_tables": ["customers", "orders"],
+      "difficulty": "difficult",
+      "category": "complex_analytics"
+    },
+    {
+      "id": 20,
+      "question": "List products with low stock (less than 10 units) and high ratings (above 4.0)",
+      "expected_tables": ["products"],
+      "difficulty": "easy",
+      "category": "multiple_conditions"
+    }
+  ]

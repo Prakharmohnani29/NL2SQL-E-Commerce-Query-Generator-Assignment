@@ -1,0 +1,62 @@
+[
+    {
+      "id": 1,
+      "question": "Show total sales by category",
+      "sql": "SELECT c.category_name, SUM(oi.subtotal) as total_sales FROM categories c JOIN products p ON c.category_id = p.category_id JOIN order_items oi ON p.product_id = oi.product_id GROUP BY c.category_name ORDER BY total_sales DESC;",
+      "difficulty": "easy"
+    },
+    {
+      "id": 2,
+      "question": "List top 5 customers by order count",
+      "sql": "SELECT c.customer_name, COUNT(o.order_id) as order_count FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.customer_name ORDER BY order_count DESC LIMIT 5;",
+      "difficulty": "easy"
+    },
+    {
+      "id": 3,
+      "question": "What is the average order value per customer segment?",
+      "sql": "SELECT c.customer_segment, AVG(o.total_amount) as avg_order_value FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_segment ORDER BY avg_order_value DESC;",
+      "difficulty": "medium"
+    },
+    {
+      "id": 4,
+      "question": "Find products with rating above 4.5 and stock below 20",
+      "sql": "SELECT product_name, rating, stock_quantity, price FROM products WHERE rating > 4.5 AND stock_quantity < 20 ORDER BY rating DESC;",
+      "difficulty": "easy"
+    },
+    {
+      "id": 5,
+      "question": "Show monthly revenue trend for 2024",
+      "sql": "SELECT DATE_TRUNC('month', order_date) as month, SUM(total_amount) as monthly_revenue FROM orders WHERE EXTRACT(YEAR FROM order_date) = 2024 GROUP BY DATE_TRUNC('month', order_date) ORDER BY month;",
+      "difficulty": "medium"
+    },
+    {
+      "id": 6,
+      "question": "Which products have never been ordered?",
+      "sql": "SELECT p.product_id, p.product_name, p.price FROM products p LEFT JOIN order_items oi ON p.product_id = oi.product_id WHERE oi.order_item_id IS NULL;",
+      "difficulty": "medium"
+    },
+    {
+      "id": 7,
+      "question": "Get customers who spent more than $5000 in total",
+      "sql": "SELECT c.customer_id, c.customer_name, c.email, SUM(o.total_amount) as total_spent FROM customers c JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.customer_name, c.email HAVING SUM(o.total_amount) > 5000 ORDER BY total_spent DESC;",
+      "difficulty": "medium"
+    },
+    {
+      "id": 8,
+      "question": "Calculate profit margin by brand",
+      "sql": "SELECT p.brand, SUM(oi.subtotal) as revenue, SUM(p.cost * oi.quantity) as cost, (SUM(oi.subtotal) - SUM(p.cost * oi.quantity)) / SUM(oi.subtotal) * 100 as profit_margin_percent FROM products p JOIN order_items oi ON p.product_id = oi.product_id GROUP BY p.brand ORDER BY profit_margin_percent DESC;",
+      "difficulty": "difficult"
+    },
+    {
+      "id": 9,
+      "question": "Find customers who ordered in January but not in February 2024",
+      "sql": "SELECT DISTINCT c.customer_id, c.customer_name FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE DATE_TRUNC('month', o.order_date) = '2024-01-01' AND c.customer_id NOT IN (SELECT customer_id FROM orders WHERE DATE_TRUNC('month', order_date) = '2024-02-01');",
+      "difficulty": "difficult"
+    },
+    {
+      "id": 10,
+      "question": "Show products with their average review rating and total reviews",
+      "sql": "SELECT p.product_name, AVG(r.rating) as avg_rating, COUNT(r.review_id) as review_count FROM products p LEFT JOIN reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.product_name ORDER BY avg_rating DESC NULLS LAST;",
+      "difficulty": "medium"
+    }
+  ]
