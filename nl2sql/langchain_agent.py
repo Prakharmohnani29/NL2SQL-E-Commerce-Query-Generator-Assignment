@@ -1,10 +1,7 @@
 from langchain_community.llms import Ollama
-from langchain.agents import AgentType, initialize_agent, Tool
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
+from langchain_core.tools import Tool
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain_community.utilities import SQLDatabase
-from langchain_experimental.sql import SQLDatabaseChain
 from typing import Dict, List
 import os
 
@@ -135,50 +132,14 @@ class LangChainSQLAgent:
         return tools
     
     def _create_agent(self):
-        """Create the ReAct agent"""
-        
-        # Agent system message
-        system_message = """You are an expert SQL query generator for an e-commerce database.
-
-Your task is to generate safe, efficient SQL queries from natural language questions.
-
-Guidelines:
-1. Use the ListTables tool to see available tables
-2. Use GetTableSchema tool to understand table structures
-3. Use SearchSimilarQueries to find relevant examples
-4. Generate a PostgreSQL SELECT query
-5. Use ValidateSQL to check your query before returning it
-6. Return ONLY the final SQL query, nothing else
-
-Safety rules:
-- ONLY generate SELECT queries
-- NO DROP, DELETE, UPDATE, or TRUNCATE
-- Use proper JOINs and aliases
-- Handle NULL values appropriately
-- Use aggregate functions when needed
-
-Think step by step and use tools to gather information before generating SQL.
-"""
-        
-        # Create agent with tools
-        agent = initialize_agent(
-            tools=self.tools,
-            llm=self.llm,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=True,
-            max_iterations=5,
-            early_stopping_method="generate",
-            handle_parsing_errors=True,
-            agent_kwargs={
-                "prefix": system_message
-            }
-        )
-        
-        return agent
+        """Create a simple agent for SQL generation"""
+        # In newer versions of langchain, agents are simplified
+        # We'll use the LLM directly with tool context
+        return None  # Will use fallback approach
     
     def generate_sql(self, question: str) -> str:
         """
-        Generate SQL query using the agent
+        Generate SQL query using the LLM with tool context
         
         Args:
             question: Natural language question
@@ -187,17 +148,46 @@ Think step by step and use tools to gather information before generating SQL.
             Generated SQL query
         """
         try:
-            # Run the agent
-            result = self.agent.run(question)
-            
-            # Extract SQL from result
-            sql = self._extract_sql(result)
-            return sql
+            # Use enhanced generation with tool context
+            return self._generate_with_tools(question)
             
         except Exception as e:
-            print(f"Agent error: {e}")
+            print(f"Generation error: {e}")
             # Fallback to simple generation
             return self._fallback_generation(question)
+    
+    def _generate_with_tools(self, question: str) -> str:
+        """Generate SQL using tools for context gathering"""
+        
+        # Gather context using tools
+        table_info = ""
+        for tool in self.tools:
+            if tool.name == "ListTables":
+                table_info = tool.func()
+                break
+        
+        # Build prompt with tool context
+        prompt_text = f"""You are an expert SQL query generator for an e-commerce database.
+
+{table_info}
+
+Instructions:
+1. Generate a valid PostgreSQL SELECT query based on the user's question
+2. Use proper JOIN clauses when accessing multiple tables
+3. Include appropriate WHERE, GROUP BY, and ORDER BY clauses
+4. Use aggregate functions (SUM, AVG, COUNT) when needed
+5. Return ONLY the SQL query without any explanation or markdown
+6. Do NOT use DROP, DELETE, UPDATE, or TRUNCATE
+
+Question: {question}
+
+SQL Query (return ONLY the SQL, no explanation):"""
+        
+        # Generate using LLM
+        response = self.llm(prompt_text)
+        
+        # Extract and return SQL
+        return self._extract_sql(response)
     
     def _extract_sql(self, response: str) -> str:
         """Extract SQL query from agent response"""
@@ -241,19 +231,15 @@ Think step by step and use tools to gather information before generating SQL.
     def _fallback_generation(self, question: str) -> str:
         """Fallback generation without agent tools"""
         
-        prompt = PromptTemplate(
-            input_variables=["question"],
-            template="""Generate a PostgreSQL SELECT query for this question:
+        prompt_text = f"""Generate a PostgreSQL SELECT query for this question:
 
 Question: {question}
 
 Tables available: customers, products, orders, order_items, categories, reviews, shipping, promotions
 
 Return ONLY the SQL query:"""
-        )
         
-        chain = LLMChain(llm=self.llm, prompt=prompt)
-        result = chain.run(question=question)
+        result = self.llm(prompt_text)
         
         return self._extract_sql(result)
     

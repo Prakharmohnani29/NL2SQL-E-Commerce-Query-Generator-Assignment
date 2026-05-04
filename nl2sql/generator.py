@@ -1,9 +1,6 @@
 from langchain_community.llms import Ollama
-from langchain.prompts import PromptTemplate, FewShotPromptTemplate
-from langchain.chains import LLMChain
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.tools import Tool
-from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import PromptTemplate
+from langchain_core.tools import Tool
 from typing import Dict, List, Optional
 from nl2sql.vector_db import VectorDBManager
 import os
@@ -113,19 +110,8 @@ class NL2SQLGenerator:
         
         return schema_text
     
-    def _create_detailed_chain(self) -> LLMChain:
+    def _create_detailed_chain(self) -> PromptTemplate:
         """Strategy 1: Detailed prompt with comprehensive instructions"""
-        
-        # Example prompt template for few-shot learning
-        example_template = """
-Question: {question}
-SQL: {sql}
-"""
-        
-        example_prompt = PromptTemplate(
-            input_variables=["question", "sql"],
-            template=example_template
-        )
         
         # Main prompt template
         prefix = """You are an expert SQL query generator for an e-commerce database.
@@ -161,9 +147,9 @@ SQL Query (return ONLY the SQL, no explanation):"""
             template=prefix + suffix
         )
         
-        return LLMChain(llm=self.llm, prompt=prompt)
+        return prompt
     
-    def _create_concise_chain(self) -> LLMChain:
+    def _create_concise_chain(self) -> PromptTemplate:
         """Strategy 2: Concise prompt with minimal instructions"""
         
         template = """Generate PostgreSQL query. Return only SQL, no explanation.
@@ -181,9 +167,9 @@ SQL:"""
             template=template
         )
         
-        return LLMChain(llm=self.llm, prompt=prompt)
+        return prompt
     
-    def _create_sql_agent(self) -> AgentExecutor:
+    def _create_sql_agent(self):
         """Create LangChain agent with SQL generation tools"""
         
         # Define tools for the agent
@@ -299,11 +285,14 @@ SQL Query (return ONLY the SQL, no explanation):"""
         similar_examples = self.vector_db.retrieve_similar(question, k=3)
         examples_text = self.vector_db.format_examples_for_prompt(similar_examples)
         
-        # Use concise chain
-        response = self.concise_chain.run(
+        # Format prompt using template
+        prompt_text = self.concise_chain.format(
             examples=examples_text,
             question=question
         )
+        
+        # Generate SQL using LLM
+        response = self.llm(prompt_text)
         
         # Extract SQL from response
         sql = self._extract_sql(response)
