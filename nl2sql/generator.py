@@ -1,6 +1,5 @@
 from langchain_community.llms import Ollama
 from langchain_core.prompts import PromptTemplate
-from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.tools import Tool
 from typing import Dict, List, Optional
 from nl2sql.vector_db import VectorDBManager
@@ -170,7 +169,7 @@ SQL:"""
         
         return prompt
     
-    def _create_sql_agent(self) -> AgentExecutor:
+    def _create_sql_agent(self):
         """Create LangChain agent with SQL generation tools"""
         
         # Define tools for the agent
