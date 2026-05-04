@@ -1,7 +1,6 @@
 from langchain_community.llms import Ollama
 from langchain.agents import create_react_agent, AgentExecutor, create_tool_calling_agent
 from langchain_core.tools import Tool
-from langchain.chains import LLMChain
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain_core.memory import ConversationBufferMemory
 from langchain_community.utilities import SQLDatabase
@@ -250,19 +249,15 @@ Think step by step and use tools to gather information before generating SQL.
     def _fallback_generation(self, question: str) -> str:
         """Fallback generation without agent tools"""
         
-        prompt = PromptTemplate(
-            input_variables=["question"],
-            template="""Generate a PostgreSQL SELECT query for this question:
+        prompt_text = f"""Generate a PostgreSQL SELECT query for this question:
 
 Question: {question}
 
 Tables available: customers, products, orders, order_items, categories, reviews, shipping, promotions
 
 Return ONLY the SQL query:"""
-        )
         
-        chain = LLMChain(llm=self.llm, prompt=prompt)
-        result = chain.run(question=question)
+        result = self.llm(prompt_text)
         
         return self._extract_sql(result)
     
