@@ -1,10 +1,7 @@
 from langchain_community.llms import Ollama
-from langchain.agents import create_react_agent, AgentExecutor, create_tool_calling_agent
 from langchain_core.tools import Tool
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
-from langchain_core.memory import ConversationBufferMemory
 from langchain_community.utilities import SQLDatabase
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from typing import Dict, List
 import os
 
@@ -135,58 +132,14 @@ class LangChainSQLAgent:
         return tools
     
     def _create_agent(self):
-        """Create the ReAct agent"""
-        
-        # Agent system message
-        system_message = """You are an expert SQL query generator for an e-commerce database.
-
-Your task is to generate safe, efficient SQL queries from natural language questions.
-
-Guidelines:
-1. Use the ListTables tool to see available tables
-2. Use GetTableSchema tool to understand table structures
-3. Use SearchSimilarQueries to find relevant examples
-4. Generate a PostgreSQL SELECT query
-5. Use ValidateSQL to check your query before returning it
-6. Return ONLY the final SQL query, nothing else
-
-Safety rules:
-- ONLY generate SELECT queries
-- NO DROP, DELETE, UPDATE, or TRUNCATE
-- Use proper JOINs and aliases
-- Handle NULL values appropriately
-- Use aggregate functions when needed
-
-Think step by step and use tools to gather information before generating SQL.
-"""
-        
-        # Create ReAct agent with the updated API
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_message),
-            ("human", "{input}"),
-            ("placeholder", "{agent_scratchpad}")
-        ])
-        
-        agent = create_tool_calling_agent(
-            llm=self.llm,
-            tools=self.tools,
-            prompt=prompt
-        )
-        
-        # Create executor
-        executor = AgentExecutor(
-            agent=agent,
-            tools=self.tools,
-            verbose=True,
-            max_iterations=5,
-            handle_parsing_errors=True
-        )
-        
-        return executor
+        """Create a simple agent for SQL generation"""
+        # In newer versions of langchain, agents are simplified
+        # We'll use the LLM directly with tool context
+        return None  # Will use fallback approach
     
     def generate_sql(self, question: str) -> str:
         """
-        Generate SQL query using the agent
+        Generate SQL query using the LLM with tool context
         
         Args:
             question: Natural language question
@@ -195,17 +148,46 @@ Think step by step and use tools to gather information before generating SQL.
             Generated SQL query
         """
         try:
-            # Run the agent
-            result = self.agent.run(question)
-            
-            # Extract SQL from result
-            sql = self._extract_sql(result)
-            return sql
+            # Use enhanced generation with tool context
+            return self._generate_with_tools(question)
             
         except Exception as e:
-            print(f"Agent error: {e}")
+            print(f"Generation error: {e}")
             # Fallback to simple generation
             return self._fallback_generation(question)
+    
+    def _generate_with_tools(self, question: str) -> str:
+        """Generate SQL using tools for context gathering"""
+        
+        # Gather context using tools
+        table_info = ""
+        for tool in self.tools:
+            if tool.name == "ListTables":
+                table_info = tool.func()
+                break
+        
+        # Build prompt with tool context
+        prompt_text = f"""You are an expert SQL query generator for an e-commerce database.
+
+{table_info}
+
+Instructions:
+1. Generate a valid PostgreSQL SELECT query based on the user's question
+2. Use proper JOIN clauses when accessing multiple tables
+3. Include appropriate WHERE, GROUP BY, and ORDER BY clauses
+4. Use aggregate functions (SUM, AVG, COUNT) when needed
+5. Return ONLY the SQL query without any explanation or markdown
+6. Do NOT use DROP, DELETE, UPDATE, or TRUNCATE
+
+Question: {question}
+
+SQL Query (return ONLY the SQL, no explanation):"""
+        
+        # Generate using LLM
+        response = self.llm(prompt_text)
+        
+        # Extract and return SQL
+        return self._extract_sql(response)
     
     def _extract_sql(self, response: str) -> str:
         """Extract SQL query from agent response"""
