@@ -1,10 +1,11 @@
 from langchain_community.llms import Ollama
-from langchain.agents import AgentType, initialize_agent, Tool
+from langchain.agents import create_react_agent, AgentExecutor, create_tool_calling_agent
+from langchain_core.tools import Tool
 from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain.memory import ConversationBufferMemory
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.memory import ConversationBufferMemory
 from langchain_community.utilities import SQLDatabase
-from langchain_experimental.sql import SQLDatabaseChain
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from typing import Dict, List
 import os
 
@@ -160,21 +161,29 @@ Safety rules:
 Think step by step and use tools to gather information before generating SQL.
 """
         
-        # Create agent with tools
-        agent = initialize_agent(
-            tools=self.tools,
+        # Create ReAct agent with the updated API
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_message),
+            ("human", "{input}"),
+            ("placeholder", "{agent_scratchpad}")
+        ])
+        
+        agent = create_tool_calling_agent(
             llm=self.llm,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=True,
-            max_iterations=5,
-            early_stopping_method="generate",
-            handle_parsing_errors=True,
-            agent_kwargs={
-                "prefix": system_message
-            }
+            tools=self.tools,
+            prompt=prompt
         )
         
-        return agent
+        # Create executor
+        executor = AgentExecutor(
+            agent=agent,
+            tools=self.tools,
+            verbose=True,
+            max_iterations=5,
+            handle_parsing_errors=True
+        )
+        
+        return executor
     
     def generate_sql(self, question: str) -> str:
         """

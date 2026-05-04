@@ -1,9 +1,9 @@
 from langchain_community.llms import Ollama
-from langchain.prompts import PromptTemplate, FewShotPromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.agents import AgentExecutor, create_react_agent
-from langchain.tools import Tool
-from langchain.memory import ConversationBufferMemory
+from langchain_core.tools import Tool
+from langchain_core.memory import ConversationBufferMemory
 from typing import Dict, List, Optional
 from nl2sql.vector_db import VectorDBManager
 import os
